@@ -38,41 +38,28 @@ func (c *LogConfig) SetLogger() {
 	logger = stdLogger{l}
 }
 
-func (slog stdLogger) Shutdown() {
-	// log.Printf("Closing log file...\n")
-	if slog.Logger != nil {
-		slog.Close()
-	}
-}
-
 func main() {
-
-	fileName := "app/kafka_error_logs/log_by_under_eiei.txt"
 	configLog := LogConfig{
-		Logfile: fileName,
+		Logfile: "default.txt",
 		MaxSize: 5,
 		MaxAge:  3,
 	}
-
 	configLog.SetLogger()
 
+	fileName := "app/kafka_error_logs/test_rotate_%s.txt"
 	txStr := "test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
-	for i := 1; i <= 100000; i++ {
-		log.Println(txStr)
+	podID := "1243"
+	fmt.Println(logger)
+	for i := 1; i <= 105000; i++ {
+		LogKafkaMessageToFile(fileName, txStr, podID)
 	}
-	logger.Shutdown()
 
-	fmt.Println(configLog)
-	fileName = "app/kafka_error_logs/log_by_under_2.txt"
-	anotherStr := "lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum lorem ipzum end"
-	fmt.Println(configLog)
-	fmt.Println(logger.Filename)
-	logger.Filename = fileName
-	fmt.Println(logger.Filename)
-	for i := 1; i <= 100000; i++ {
-		log.Println(anotherStr)
+	fileName = "app/kafka_error_logs/test_rotate_2_%s.txt"
+	txStr = "2test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
+	podID = "1245"
+	for i := 1; i <= 105000; i++ {
+		LogKafkaMessageToFile(fileName, txStr, podID)
 	}
-	logger.Shutdown()
 }
 
 func GetFileNameFormat(podID, fileName string) string {
@@ -88,22 +75,15 @@ func GetFileNameFormat(podID, fileName string) string {
 }
 
 func WriteLogFile(fileName string, txStr string) {
-	l := &lumberjack.Logger{
-		Filename:   fileName,
-		MaxSize:    50,   // megabytes
-		MaxBackups: 3,    // files
-		MaxAge:     28,   // days
-		Compress:   true, // disabled by default
-	}
-
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	log.SetOutput(l)
+	logger.Filename = fileName
 	log.Println(txStr)
+	defer logger.Close()
 }
 
 type LogKafkaMessageToFileFunc func(string, string, string)
 
 func LogKafkaMessageToFile(fileName string, txStr string, podID string) {
 	cleanFileName := GetFileNameFormat(podID, fileName)
+	fmt.Println(cleanFileName)
 	WriteLogFile(cleanFileName, txStr)
 }
