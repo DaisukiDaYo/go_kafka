@@ -14,8 +14,23 @@ type stdLogger struct {
 }
 
 var (
-	ReverseTodayLogger   stdLogger
-	ForcepostTodayLogger stdLogger
+	ReverseFirstWriter    stdLogger
+	ReverseSecondWriter   stdLogger
+	ReverseThirdWriter    stdLogger
+	ForcepostFirstWriter  stdLogger
+	ForcepostSecondWriter stdLogger
+	ForcepostThirdWriter  stdLogger
+	reverseWriter         stdLogger
+	forcepostWriter       stdLogger
+
+	reverseFirstLogger    *log.Logger
+	reverseSecondLogger   *log.Logger
+	reverseThirdLogger    *log.Logger
+	forcepostFirstLogger  *log.Logger
+	forcepostSecondLogger *log.Logger
+	forcepostThirdLogger  *log.Logger
+	reverseLogger         *log.Logger
+	forcepostLogger       *log.Logger
 )
 
 type LogConfig struct {
@@ -24,32 +39,49 @@ type LogConfig struct {
 	MaxAge  int
 }
 
-func (c *LogConfig) SetLogger() (*log.Logger, *log.Logger) {
+func generateLumberjack(c *LogConfig) *lumberjack.Logger {
+	return &lumberjack.Logger{
+		Filename:   c.Logfile,
+		MaxSize:    c.MaxSize, // megabytes
+		MaxAge:     c.MaxAge,  //days
+		MaxBackups: 3,         // files
+		Compress:   true,      // disabled by default
+	}
+}
+
+func (c *LogConfig) SetLogger() (*log.Logger, *log.Logger, stdLogger, stdLogger) {
 	fmt.Printf("Sending log messages to: %s\n", c.Logfile)
-	reverseLumberjack := &lumberjack.Logger{
-		Filename:   c.Logfile,
-		MaxSize:    c.MaxSize, // megabytes
-		MaxAge:     c.MaxAge,  //days
-		MaxBackups: 3,         // files
-		Compress:   true,      // disabled by default
-	}
-	reverseLogger := log.New(reverseLumberjack, "", 1)
-	reverseLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ReverseTodayLogger = stdLogger{reverseLumberjack}
+	reverseLumberjack := generateLumberjack(c)
+	reverseFirstLogger = log.New(reverseLumberjack, "", 1)
+	reverseFirstLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ReverseFirstWriter = stdLogger{reverseLumberjack}
 
-	forcepostLumberjack := &lumberjack.Logger{
-		Filename:   c.Logfile,
-		MaxSize:    c.MaxSize, // megabytes
-		MaxAge:     c.MaxAge,  //days
-		MaxBackups: 3,         // files
-		Compress:   true,      // disabled by default
-	}
+	reverseSecondLumberjack := generateLumberjack(c)
+	reverseSecondLogger = log.New(reverseSecondLumberjack, "", 1)
+	reverseSecondLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ReverseSecondWriter = stdLogger{reverseSecondLumberjack}
 
-	forcepostLogger := log.New(forcepostLumberjack, "", 1)
-	forcepostLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ForcepostTodayLogger = stdLogger{forcepostLumberjack}
+	reverseThirdLumberjack := generateLumberjack(c)
+	reverseThirdLogger := log.New(reverseThirdLumberjack, "", 1)
+	reverseThirdLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ReverseThirdWriter = stdLogger{reverseThirdLumberjack}
 
-	return reverseLogger, forcepostLogger
+	forcepostLumberjack := generateLumberjack(c)
+	forcepostFirstLogger := log.New(forcepostLumberjack, "", 1)
+	forcepostFirstLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ForcepostFirstWriter = stdLogger{forcepostLumberjack}
+
+	forcepostSecondLumberjack := generateLumberjack(c)
+	forcepostSecondLogger := log.New(forcepostSecondLumberjack, "", 1)
+	forcepostSecondLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ForcepostSecondWriter = stdLogger{forcepostSecondLumberjack}
+
+	forcepostThirdLumberjack := generateLumberjack(c)
+	forcepostThirdLogger := log.New(forcepostThirdLumberjack, "", 1)
+	forcepostThirdLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	ForcepostThirdWriter = stdLogger{forcepostThirdLumberjack}
+
+	return reverseFirstLogger, forcepostFirstLogger, ReverseFirstWriter, ForcepostFirstWriter
 }
 
 func main() {
@@ -58,20 +90,20 @@ func main() {
 		MaxSize: 5,
 		MaxAge:  3,
 	}
-	reverseLogger, forcepostLogger := configLog.SetLogger()
+	reverseLogger, forcepostLogger, reverseWriter, forcepostWriter := configLog.SetLogger()
 
 	fileName := "app/kafka_error_logs/reverse_rotate_%s.txt"
 	txStr := "test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
 	podID := "1243"
 	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, ReverseTodayLogger, reverseLogger)
+		LogKafkaMessageToFile(fileName, txStr, podID, reverseWriter, reverseLogger)
 	}
 
 	fileName = "app/kafka_error_logs/force_post_rotate_2_%s.txt"
 	txStr = "2test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
 	podID = "1245"
 	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, ForcepostTodayLogger, forcepostLogger)
+		LogKafkaMessageToFile(fileName, txStr, podID, forcepostWriter, forcepostLogger)
 	}
 
 	t := time.Now()
@@ -79,14 +111,28 @@ func main() {
 	fmt.Println(t)
 	fmt.Println(rounded)
 	if true {
-		ReverseTodayLogger.Close()
+		reverseWriter = ReverseSecondWriter
+		reverseLogger = reverseSecondLogger
+		ReverseFirstWriter.Close()
 	}
 
 	fileName = "app/kafka_error_logs/reverse_rotate_tmr_%s.txt"
 	txStr = "3test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
 	podID = "1243"
 	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, ReverseTodayLogger, reverseLogger)
+		LogKafkaMessageToFile(fileName, txStr, podID, reverseWriter, reverseLogger)
+	}
+
+	if true {
+		reverseWriter = ReverseFirstWriter
+		reverseLogger = reverseFirstLogger
+	}
+
+	fileName = "app/kafka_error_logs/reverse_rotate_3_%s.txt"
+	txStr = "4test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
+	podID = "1243"
+	for i := 1; i <= 105000; i++ {
+		LogKafkaMessageToFile(fileName, txStr, podID, reverseWriter, reverseLogger)
 	}
 }
 
