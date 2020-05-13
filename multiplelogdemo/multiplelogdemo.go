@@ -14,39 +14,19 @@ type stdLogger struct {
 }
 
 var (
-	ReverseFirstWriter     stdLogger
-	ReverseSecondWriter    stdLogger
-	ReverseThirdWriter     stdLogger
-	ReverseForthWriter     stdLogger
-	ReverseFifthWriter     stdLogger
-	ReverseSixthWriter     stdLogger
-	ReverseSeventhWriter   stdLogger
-	ForcepostFirstWriter   stdLogger
-	ForcepostSecondWriter  stdLogger
-	ForcepostThirdWriter   stdLogger
-	ForcepostForthWriter   stdLogger
-	ForcepostFifthWriter   stdLogger
-	ForcepostSixthWriter   stdLogger
-	ForcepostSeventhWriter stdLogger
-	ReverseWriter          stdLogger
-	ForcepostWriter        stdLogger
+	ReverseFirstWriter    stdLogger
+	ReverseSecondWriter   stdLogger
+	ForcepostFirstWriter  stdLogger
+	ForcepostSecondWriter stdLogger
+	ReverseWriter         stdLogger
+	ForcepostWriter       stdLogger
 
-	reverseFirstLogger     *log.Logger
-	reverseSecondLogger    *log.Logger
-	reverseThirdLogger     *log.Logger
-	reverseForthLogger     *log.Logger
-	reverseFifthLogger     *log.Logger
-	reverseSixthLogger     *log.Logger
-	reverseSeventhLogger   *log.Logger
-	forcepostFirstLogger   *log.Logger
-	forcepostSecondLogger  *log.Logger
-	forcepostThirdLogger   *log.Logger
-	forcepostForthLogger   *log.Logger
-	forcepostFifthLogger   *log.Logger
-	forcepostSixthLogger   *log.Logger
-	forcepostSeventhLogger *log.Logger
-	ReverseLogger          *log.Logger
-	ForcepostLogger        *log.Logger
+	reverseFirstLogger    *log.Logger
+	reverseSecondLogger   *log.Logger
+	forcepostFirstLogger  *log.Logger
+	forcepostSecondLogger *log.Logger
+	ReverseLogger         *log.Logger
+	ForcepostLogger       *log.Logger
 )
 
 type LogConfig struct {
@@ -72,11 +52,9 @@ func generateLumberjack(c *LogConfig) (*log.Logger, stdLogger) {
 func (c *LogConfig) SetLogger() {
 	reverseFirstLogger, ReverseFirstWriter = generateLumberjack(c)
 	reverseSecondLogger, ReverseSecondWriter = generateLumberjack(c)
-	reverseThirdLogger, ReverseThirdWriter = generateLumberjack(c)
 
 	forcepostFirstLogger, ForcepostFirstWriter = generateLumberjack(c)
 	forcepostSecondLogger, ForcepostSecondWriter = generateLumberjack(c)
-	forcepostThirdLogger, ForcepostThirdWriter = generateLumberjack(c)
 
 	ReverseLogger = reverseFirstLogger
 	ForcepostLogger = forcepostFirstLogger
@@ -85,64 +63,22 @@ func (c *LogConfig) SetLogger() {
 }
 
 func CheckKafkaLogWriter() {
-	// Can we use switch case to switching log writer?
-	switch time.Now().Weekday() {
-	case time.Monday:
-		fmt.Println("Use 1 writer")
-		ReverseWriter = ReverseFirstWriter
-		ReverseLogger = reverseFirstLogger
-		ForcepostWriter = ForcepostFirstWriter
-		ForcepostLogger = forcepostFirstLogger
-		defer ReverseSeventhWriter.Close()
-		defer ForcepostSeventhWriter.Close()
-	case time.Tuesday:
-		fmt.Println("Use 2 writer")
+	if ReverseWriter == ReverseFirstWriter && ReverseLogger == reverseFirstLogger && ForcepostWriter == ForcepostFirstWriter && ForcepostLogger == forcepostFirstLogger {
+		fmt.Println("Using first logger")
 		ReverseWriter = ReverseSecondWriter
 		ReverseLogger = reverseSecondLogger
 		ForcepostWriter = ForcepostSecondWriter
 		ForcepostLogger = forcepostSecondLogger
-		defer ReverseFirstWriter.Close()
-		defer ForcepostFirstWriter.Close()
-	case time.Wednesday:
-		fmt.Println("Use 3 writer")
-		ReverseWriter = ReverseThirdWriter
-		ReverseLogger = reverseThirdLogger
-		ForcepostWriter = ForcepostThirdWriter
-		ForcepostLogger = forcepostThirdLogger
-		defer ReverseSecondWriter.Close()
-		defer ForcepostSecondWriter.Close()
-	case time.Thursday:
-		fmt.Println("Use 4 writer")
-		ReverseWriter = ReverseForthWriter
-		ReverseLogger = reverseForthLogger
-		ForcepostWriter = ForcepostForthWriter
-		ForcepostLogger = forcepostForthLogger
-		defer ReverseThirdWriter.Close()
-		defer ForcepostThirdWriter.Close()
-	case time.Friday:
-		fmt.Println("Use 5 writer")
-		ReverseWriter = ReverseFifthWriter
-		ReverseLogger = reverseFifthLogger
-		ForcepostWriter = ForcepostFifthWriter
-		ForcepostLogger = forcepostFifthLogger
-		defer ReverseForthWriter.Close()
-		defer ForcepostForthWriter.Close()
-	case time.Saturday:
-		fmt.Println("Use 6 writer")
-		ReverseWriter = ReverseSixthWriter
-		ReverseLogger = reverseSixthLogger
-		ForcepostWriter = ForcepostSixthWriter
-		ForcepostLogger = forcepostSixthLogger
-		defer ReverseFifthWriter.Close()
-		defer ForcepostFifthWriter.Close()
-	case time.Sunday:
-		fmt.Println("Use 7 writer")
-		ReverseWriter = ReverseSeventhWriter
-		ReverseLogger = reverseSeventhLogger
-		ForcepostWriter = ForcepostSeventhWriter
-		ForcepostLogger = forcepostSeventhLogger
-		defer ReverseSixthWriter.Close()
-		defer ForcepostSixthWriter.Close()
+		ReverseFirstWriter.Close()
+		ForcepostFirstWriter.Close()
+	} else {
+		fmt.Println("Using second logger")
+		ReverseWriter = ReverseFirstWriter
+		ReverseLogger = reverseFirstLogger
+		ForcepostWriter = ForcepostFirstWriter
+		ForcepostLogger = forcepostFirstLogger
+		ReverseSecondWriter.Close()
+		ForcepostSecondWriter.Close()
 	}
 }
 
