@@ -93,56 +93,56 @@ func CheckKafkaLogWriter() {
 		ReverseLogger = reverseFirstLogger
 		ForcepostWriter = ForcepostFirstWriter
 		ForcepostLogger = forcepostFirstLogger
-		ReverseSeventhWriter.Close()
-		ForcepostSeventhWriter.Close()
+		defer ReverseSeventhWriter.Close()
+		defer ForcepostSeventhWriter.Close()
 	case time.Tuesday:
 		fmt.Println("Use 2 writer")
 		ReverseWriter = ReverseSecondWriter
 		ReverseLogger = reverseSecondLogger
 		ForcepostWriter = ForcepostSecondWriter
 		ForcepostLogger = forcepostSecondLogger
-		ReverseFirstWriter.Close()
-		ForcepostFirstWriter.Close()
+		defer ReverseFirstWriter.Close()
+		defer ForcepostFirstWriter.Close()
 	case time.Wednesday:
 		fmt.Println("Use 3 writer")
 		ReverseWriter = ReverseThirdWriter
 		ReverseLogger = reverseThirdLogger
 		ForcepostWriter = ForcepostThirdWriter
 		ForcepostLogger = forcepostThirdLogger
-		ReverseSecondWriter.Close()
-		ForcepostSecondWriter.Close()
+		defer ReverseSecondWriter.Close()
+		defer ForcepostSecondWriter.Close()
 	case time.Thursday:
 		fmt.Println("Use 4 writer")
 		ReverseWriter = ReverseForthWriter
 		ReverseLogger = reverseForthLogger
 		ForcepostWriter = ForcepostForthWriter
 		ForcepostLogger = forcepostForthLogger
-		ReverseThirdWriter.Close()
-		ForcepostThirdWriter.Close()
+		defer ReverseThirdWriter.Close()
+		defer ForcepostThirdWriter.Close()
 	case time.Friday:
 		fmt.Println("Use 5 writer")
 		ReverseWriter = ReverseFifthWriter
 		ReverseLogger = reverseFifthLogger
 		ForcepostWriter = ForcepostFifthWriter
 		ForcepostLogger = forcepostFifthLogger
-		ReverseForthWriter.Close()
-		ForcepostForthWriter.Close()
+		defer ReverseForthWriter.Close()
+		defer ForcepostForthWriter.Close()
 	case time.Saturday:
 		fmt.Println("Use 6 writer")
 		ReverseWriter = ReverseSixthWriter
 		ReverseLogger = reverseSixthLogger
 		ForcepostWriter = ForcepostSixthWriter
 		ForcepostLogger = forcepostSixthLogger
-		ReverseFifthWriter.Close()
-		ForcepostFifthWriter.Close()
+		defer ReverseFifthWriter.Close()
+		defer ForcepostFifthWriter.Close()
 	case time.Sunday:
 		fmt.Println("Use 7 writer")
 		ReverseWriter = ReverseSeventhWriter
 		ReverseLogger = reverseSeventhLogger
 		ForcepostWriter = ForcepostSeventhWriter
 		ForcepostLogger = forcepostSeventhLogger
-		ReverseSixthWriter.Close()
-		ForcepostSixthWriter.Close()
+		defer ReverseSixthWriter.Close()
+		defer ForcepostSixthWriter.Close()
 	}
 }
 
