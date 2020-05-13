@@ -116,6 +116,24 @@ func main() {
 		ReverseFirstWriter.Close()
 	}
 
+	// Can we use switch case to switching log writer?
+	switch time.Now().Weekday() {
+	case time.Monday:
+		fmt.Println("Use 1 writer")
+	case time.Tuesday:
+		fmt.Println("Use 2 writer")
+	case time.Wednesday:
+		fmt.Println("Use 3 writer")
+	case time.Thursday:
+		fmt.Println("Use 4 writer")
+	case time.Friday:
+		fmt.Println("Use 5 writer")
+	case time.Saturday:
+		fmt.Println("Use 6 writer")
+	case time.Sunday:
+		fmt.Println("Use 7 writer")
+	}
+
 	fileName = "app/kafka_error_logs/reverse_rotate_tmr_%s.txt"
 	txStr = "3test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
 	podID = "1243"
