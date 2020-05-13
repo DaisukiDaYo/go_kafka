@@ -1,10 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"go-kafka/multiplelogdemo"
+
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
+	c := cron.New()
+	//c.AddFunc("@daily", multiplelogdemo.CheckKafkaLogWriter())
+	c.AddFunc("* * * * *", func() { fmt.Println("Every minutes.") })
+	c.AddFunc("@daily", multiplelogdemo.CheckKafkaLogWriter)
+	c.Start()
+	fmt.Println(c.Entries())
+
 	configLog := multiplelogdemo.LogConfig{
 		Logfile: "default.txt",
 		MaxSize: 5,
@@ -60,5 +70,8 @@ func main() {
 			podID,
 			multiplelogdemo.ForcepostWriter,
 			multiplelogdemo.ForcepostLogger)
+	}
+
+	for {
 	}
 }
