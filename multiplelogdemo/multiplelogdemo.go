@@ -55,14 +55,33 @@ type LogConfig struct {
 	MaxAge  int
 }
 
-func generateLumberjack(c *LogConfig) *lumberjack.Logger {
-	return &lumberjack.Logger{
+func generateLumberjack(c *LogConfig) (*log.Logger, stdLogger) {
+	l := &lumberjack.Logger{
 		Filename:   c.Logfile,
 		MaxSize:    c.MaxSize, // megabytes
 		MaxAge:     c.MaxAge,  //days
 		MaxBackups: 3,         // files
 		Compress:   true,      // disabled by default
 	}
+	logger := log.New(l, "", 1)
+	logger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	writer := stdLogger{l}
+	return logger, writer
+}
+
+func (c *LogConfig) SetLogger() {
+	reverseFirstLogger, ReverseFirstWriter = generateLumberjack(c)
+	reverseSecondLogger, ReverseSecondWriter = generateLumberjack(c)
+	reverseThirdLogger, ReverseThirdWriter = generateLumberjack(c)
+
+	forcepostFirstLogger, ForcepostFirstWriter = generateLumberjack(c)
+	forcepostSecondLogger, ForcepostSecondWriter = generateLumberjack(c)
+	forcepostThirdLogger, ForcepostThirdWriter = generateLumberjack(c)
+
+	ReverseLogger = reverseFirstLogger
+	ForcepostLogger = forcepostFirstLogger
+	ReverseWriter = ReverseFirstWriter
+	ForcepostWriter = ForcepostFirstWriter
 }
 
 func CheckKafkaLogWriter() {
@@ -125,44 +144,6 @@ func CheckKafkaLogWriter() {
 		ReverseSixthWriter.Close()
 		ForcepostSixthWriter.Close()
 	}
-}
-
-func (c *LogConfig) SetLogger() {
-	fmt.Printf("Sending log messages to: %s\n", c.Logfile)
-	reverseLumberjack := generateLumberjack(c)
-	reverseFirstLogger = log.New(reverseLumberjack, "", 1)
-	reverseFirstLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ReverseFirstWriter = stdLogger{reverseLumberjack}
-
-	reverseSecondLumberjack := generateLumberjack(c)
-	reverseSecondLogger = log.New(reverseSecondLumberjack, "", 1)
-	reverseSecondLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ReverseSecondWriter = stdLogger{reverseSecondLumberjack}
-
-	reverseThirdLumberjack := generateLumberjack(c)
-	reverseThirdLogger = log.New(reverseThirdLumberjack, "", 1)
-	reverseThirdLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ReverseThirdWriter = stdLogger{reverseThirdLumberjack}
-
-	forcepostLumberjack := generateLumberjack(c)
-	forcepostFirstLogger = log.New(forcepostLumberjack, "", 1)
-	forcepostFirstLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ForcepostFirstWriter = stdLogger{forcepostLumberjack}
-
-	forcepostSecondLumberjack := generateLumberjack(c)
-	forcepostSecondLogger = log.New(forcepostSecondLumberjack, "", 1)
-	forcepostSecondLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ForcepostSecondWriter = stdLogger{forcepostSecondLumberjack}
-
-	forcepostThirdLumberjack := generateLumberjack(c)
-	forcepostThirdLogger = log.New(forcepostThirdLumberjack, "", 1)
-	forcepostThirdLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	ForcepostThirdWriter = stdLogger{forcepostThirdLumberjack}
-
-	ReverseLogger = reverseFirstLogger
-	ForcepostLogger = forcepostFirstLogger
-	ReverseWriter = ReverseFirstWriter
-	ForcepostWriter = ForcepostFirstWriter
 }
 
 func GetFileNameFormat(podID, fileName string) string {
