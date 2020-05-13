@@ -1,4 +1,4 @@
-package main
+package multiplelogdemo
 
 import (
 	"fmt"
@@ -28,8 +28,8 @@ var (
 	ForcepostFifthWriter   stdLogger
 	ForcepostSixthWriter   stdLogger
 	ForcepostSeventhWriter stdLogger
-	reverseWriter          stdLogger
-	forcepostWriter        stdLogger
+	ReverseWriter          stdLogger
+	ForcepostWriter        stdLogger
 
 	reverseFirstLogger     *log.Logger
 	reverseSecondLogger    *log.Logger
@@ -45,8 +45,8 @@ var (
 	forcepostFifthLogger   *log.Logger
 	forcepostSixthLogger   *log.Logger
 	forcepostSeventhLogger *log.Logger
-	reverseLogger          *log.Logger
-	forcepostLogger        *log.Logger
+	ReverseLogger          *log.Logger
+	ForcepostLogger        *log.Logger
 )
 
 type LogConfig struct {
@@ -65,70 +65,69 @@ func generateLumberjack(c *LogConfig) *lumberjack.Logger {
 	}
 }
 
-func CheckKafkaLogWriter() (*log.Logger, *log.Logger, stdLogger, stdLogger) {
+func CheckKafkaLogWriter() {
 	// Can we use switch case to switching log writer?
 	switch time.Now().Weekday() {
 	case time.Monday:
 		fmt.Println("Use 1 writer")
-		reverseWriter = ReverseFirstWriter
-		reverseLogger = reverseFirstLogger
-		forcepostWriter = ForcepostFirstWriter
-		forcepostLogger = forcepostFirstLogger
+		ReverseWriter = ReverseFirstWriter
+		ReverseLogger = reverseFirstLogger
+		ForcepostWriter = ForcepostFirstWriter
+		ForcepostLogger = forcepostFirstLogger
 		ReverseSeventhWriter.Close()
 		ForcepostSeventhWriter.Close()
 	case time.Tuesday:
 		fmt.Println("Use 2 writer")
-		reverseWriter = ReverseSecondWriter
-		reverseLogger = reverseSecondLogger
-		forcepostWriter = ForcepostSecondWriter
-		forcepostLogger = forcepostSecondLogger
+		ReverseWriter = ReverseSecondWriter
+		ReverseLogger = reverseSecondLogger
+		ForcepostWriter = ForcepostSecondWriter
+		ForcepostLogger = forcepostSecondLogger
 		ReverseFirstWriter.Close()
 		ForcepostFirstWriter.Close()
 	case time.Wednesday:
 		fmt.Println("Use 3 writer")
-		reverseWriter = ReverseThirdWriter
-		reverseLogger = reverseThirdLogger
-		forcepostWriter = ForcepostThirdWriter
-		forcepostLogger = forcepostThirdLogger
+		ReverseWriter = ReverseThirdWriter
+		ReverseLogger = reverseThirdLogger
+		ForcepostWriter = ForcepostThirdWriter
+		ForcepostLogger = forcepostThirdLogger
 		ReverseSecondWriter.Close()
 		ForcepostSecondWriter.Close()
 	case time.Thursday:
 		fmt.Println("Use 4 writer")
-		reverseWriter = ReverseForthWriter
-		reverseLogger = reverseForthLogger
-		forcepostWriter = ForcepostForthWriter
-		forcepostLogger = forcepostForthLogger
+		ReverseWriter = ReverseForthWriter
+		ReverseLogger = reverseForthLogger
+		ForcepostWriter = ForcepostForthWriter
+		ForcepostLogger = forcepostForthLogger
 		ReverseThirdWriter.Close()
 		ForcepostThirdWriter.Close()
 	case time.Friday:
 		fmt.Println("Use 5 writer")
-		reverseWriter = ReverseFifthWriter
-		reverseLogger = reverseFifthLogger
-		forcepostWriter = ForcepostFifthWriter
-		forcepostLogger = forcepostFifthLogger
+		ReverseWriter = ReverseFifthWriter
+		ReverseLogger = reverseFifthLogger
+		ForcepostWriter = ForcepostFifthWriter
+		ForcepostLogger = forcepostFifthLogger
 		ReverseForthWriter.Close()
 		ForcepostForthWriter.Close()
 	case time.Saturday:
 		fmt.Println("Use 6 writer")
-		reverseWriter = ReverseSixthWriter
-		reverseLogger = reverseSixthLogger
-		forcepostWriter = ForcepostSixthWriter
-		forcepostLogger = forcepostSixthLogger
+		ReverseWriter = ReverseSixthWriter
+		ReverseLogger = reverseSixthLogger
+		ForcepostWriter = ForcepostSixthWriter
+		ForcepostLogger = forcepostSixthLogger
 		ReverseFifthWriter.Close()
 		ForcepostFifthWriter.Close()
 	case time.Sunday:
 		fmt.Println("Use 7 writer")
-		reverseWriter = ReverseSeventhWriter
-		reverseLogger = reverseSeventhLogger
-		forcepostWriter = ForcepostSeventhWriter
-		forcepostLogger = forcepostSeventhLogger
+		ReverseWriter = ReverseSeventhWriter
+		ReverseLogger = reverseSeventhLogger
+		ForcepostWriter = ForcepostSeventhWriter
+		ForcepostLogger = forcepostSeventhLogger
 		ReverseSixthWriter.Close()
 		ForcepostSixthWriter.Close()
 	}
-	return reverseLogger, forcepostLogger, reverseWriter, forcepostWriter
 }
 
-func (c *LogConfig) SetLogger() (*log.Logger, *log.Logger, stdLogger, stdLogger) {
+func (c *LogConfig) SetLogger() {
 	fmt.Printf("Sending log messages to: %s\n", c.Logfile)
 	reverseLumberjack := generateLumberjack(c)
 	reverseFirstLogger = log.New(reverseLumberjack, "", 1)
@@ -160,46 +159,10 @@ func (c *LogConfig) SetLogger() (*log.Logger, *log.Logger, stdLogger, stdLogger)
 	forcepostThirdLogger.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 	ForcepostThirdWriter = stdLogger{forcepostThirdLumberjack}
 
-	return reverseFirstLogger, forcepostFirstLogger, ReverseFirstWriter, ForcepostFirstWriter
-}
-
-func main() {
-	configLog := LogConfig{
-		Logfile: "default.txt",
-		MaxSize: 5,
-		MaxAge:  3,
-	}
-	reverseLogger, forcepostLogger, reverseWriter, forcepostWriter := configLog.SetLogger()
-
-	fileName := "app/kafka_error_logs/reverse_rotate_%s.txt"
-	txStr := "test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
-	podID := "1243"
-	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, reverseWriter, reverseLogger)
-	}
-
-	fileName = "app/kafka_error_logs/force_post_rotate_2_%s.txt"
-	txStr = "2test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
-	podID = "1245"
-	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, forcepostWriter, forcepostLogger)
-	}
-
-	reverseLogger, forcepostLogger, reverseWriter, forcepostWriter = CheckKafkaLogWriter()
-
-	fileName = "app/kafka_error_logs/reverse_rotate_tmr_%s.txt"
-	txStr = "3test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
-	podID = "1243"
-	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, reverseWriter, reverseLogger)
-	}
-
-	fileName = "app/kafka_error_logs/force_post_rotate_tmr_%s.txt"
-	txStr = "4test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file test rolling file end"
-	podID = "1245"
-	for i := 1; i <= 105000; i++ {
-		LogKafkaMessageToFile(fileName, txStr, podID, forcepostWriter, forcepostLogger)
-	}
+	ReverseLogger = reverseFirstLogger
+	ForcepostLogger = forcepostFirstLogger
+	ReverseWriter = ReverseFirstWriter
+	ForcepostWriter = ForcepostFirstWriter
 }
 
 func GetFileNameFormat(podID, fileName string) string {
